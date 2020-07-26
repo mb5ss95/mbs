@@ -4,32 +4,33 @@ from _thread import *
 import chardet
 
 
-# 쓰레드에서 실행되는 코드입니다. 
+def threaded(client_socket, address): 
 
-# 접속한 클라이언트마다 새로운 쓰레드가 생성되어 통신을 하게 됩니다. 
-def threaded(client_socket, addr): 
+    print('C host :', address[0], ', port :', address[1]) 
+    
+    check = True
 
-    print('Connected by :', addr[0], ':', addr[1]) 
-
-
-
-    # 클라이언트가 접속을 끊을 때 까지 반복합니다. 
     while True: 
-        # 데이터가 수신되면 클라이언트에 다시 전송합니다.(에코)
-        data = client_socket.recv(1024)
 
-        if not data: 
-            print('Disconnected by ' + addr[0],':',addr[1])
-            break
-        print('Received from ' + addr[0],':',addr[1])
-        print(chardet.detect(data)) # {'encoding': 'ISO-8859-1', 'confidence': 0.73, 'language': ''}
-        print(data)                  # b'\xac\xed\x00\x05'
+        receive_data = client_socket.recv(1024)
+
+        if receive_data and check: 
+            print('R host :', address[0], ', port :', address[1]) 
+            #print(chardet.detect(receive_data))  # {'encoding': 'ISO-8859-1', 'confidence': 0.73, 'language': ''}
+            #print(receive_data)                  # b'\xac\xed\x00\x05'
             
-        temp = data[3:].decode('utf-8')
-        print('test' + temp)
+            check = not check
 
-             
-    client_socket.close() 
+            with open("C:/Users/mb5ss/Desktop/병짱맨/my_new.txt", "w") as json_file:
+                json.dump(receive_data[3:].decode('utf-8'), json_file)
+
+            
+
+        else:
+            print('D host :', address[0], ', port :', address[1]) 
+            break
+
+    client_socket.close()
 
 
 HOST = '192.168.219.101'
@@ -42,10 +43,6 @@ server_socket.listen()
 
 print('server start')
 
-
-# 클라이언트가 접속하면 accept 함수에서 새로운 소켓을 리턴합니다.
-
-# 새로운 쓰레드에서 해당 소켓을 사용하여 통신을 하게 됩니다. 
 while True: 
 
     print('wait')
