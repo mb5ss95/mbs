@@ -1,40 +1,44 @@
 import socket 
 import json
-from _thread import *
 import chardet
 
 
-def threaded(client_socket, address): 
+def threaded(socket, address): 
 
-    print('C host :', address[0], ', port :', address[1]) 
+    print('C0 host :', address[0], ', port :', address[1]) 
     
-    check = True
 
     while True: 
+        receive_data = socket.recv(1024)[2:].decode('utf-8')
+        if 'test' in receive_data:
+            print('R1 host :', address[0], ', port :', address[1], ', data : ', receive_data) 
+            file_path = 'F:/Other/사진/nako009.jpg'
+            gogo = init_image(file_path)
+            with open("C:/Users/mb5ss/Desktop/test/my_new.txt", "w") as json_file:
+                json_file.write(str(gogo))
+            socket.sendall (gogo)
+            print('success')
 
-        receive_data = client_socket.recv(1024)
-
-        if receive_data and check: 
-            print('R host :', address[0], ', port :', address[1]) 
+        elif 'real' in receive_data: 
+            print('R2 host :', address[0], ', port :', address[1], ', data : ', receive_data) 
             #print(chardet.detect(receive_data))  # {'encoding': 'ISO-8859-1', 'confidence': 0.73, 'language': ''}
             #print(receive_data)                  # b'\xac\xed\x00\x05'
-            
-            check = not check
 
-            with open("C:/Users/mb5ss/Desktop/병짱맨/my_new.txt", "w") as json_file:
-                json.dump(receive_data[3:].decode('utf-8'), json_file)
+            with open("C:/Users/mb5ss/Desktop/test/my_new.txt", "w") as json_file:
+                json.dump(receive_data, json_file)
 
-            
-
-        else:
-            print('D host :', address[0], ', port :', address[1]) 
+        elif not receive_data:
+            print('D0 host :', address[0], ', port :', address[1]) 
             break
-
-    client_socket.close()
+    
+    
+    socket.close()
 
 
 HOST = '192.168.219.101'
 PORT = 3000
+file_path = 'F:/Other/사진/nako009.jpg'
+
 
 server_socket = socket.socket(socket.AF_INET, socket.SOCK_STREAM) 
 server_socket.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEADDR, 1)
@@ -44,9 +48,6 @@ server_socket.listen()
 print('server start')
 
 while True: 
-
-    print('wait')
-
 
     client_socket, addr = server_socket.accept() 
     start_new_thread(threaded, (client_socket, addr)) 
